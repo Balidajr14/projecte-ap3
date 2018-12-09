@@ -8,24 +8,26 @@ typedef pair<int, int> pii;
 typedef vector<int> VI;
 typedef vector<VI> Matriu;
 
-// Variables Globals
-ifstream in;
-string fileout;
-
-int pen_opt;
-int C, M, K;
-vector<pii> proporcions;
-vector<int> sortida_opt;
-
-clock_t tStart;
-
 struct Classe {
 	int id;
 	int ncars;
 	vector<bool> millores; 
 };
 
-bool count_finestra(const vector<Classe>& classes, const vector<int>& sortida, int nfin, int m, int k, int& pen) {
+// Variables Globals
+string fileout;
+
+int pen_opt;
+int C, M, K;
+
+vector<pii> proporcions;
+vector<int> sortida;
+vector<Classe> classes(K);
+
+clock_t tStart;
+
+bool count_finestra(int nfin, int m, int k, int& pen) {
+	
 	int counter = -proporcions[m].first;
 	// Recorrem la finestra de k a k - nfin
 	for (int i = 0; i < nfin; ++i){
@@ -39,20 +41,20 @@ bool count_finestra(const vector<Classe>& classes, const vector<int>& sortida, i
 	return false;
 }
 
-void act_pen(const vector<Classe>& classes, const vector<int>& sortida,
-				int id, int k, int& pen) {
+void act_pen(int id, int k, int& pen) {
+	
 	// Finestres fins a k
-	for (int j = 0; j < M; ++j) {
-		int nfin = min(proporcions[j].second, k + 1);
-		if (count_finestra(classes, sortida, nfin, j, k, pen)) return;
+	for (int m = 0; m < M; ++m) {
+		int nfin = min(proporcions[m].second, k + 1);
+		if (count_finestra(nfin, m, k, pen)) return;
 	}
 	
 	// Últimes finestres
 	if (k == C - 1) {
-		for (int j = 0; j < M; ++j) {
-			int nfin = min(proporcions[j].second, k + 1); 
+		for (int m = 0; m < M; ++m) {
+			int nfin = min(proporcions[m].second, k + 1); 
 			while (--nfin > 0) {
-				if (count_finestra(classes, sortida, nfin, j, k, pen)) {
+				if (count_finestra(nfin, m, k, pen)) {
 					return; // pen >= pen_opt
 				}
 			}
@@ -60,14 +62,14 @@ void act_pen(const vector<Classe>& classes, const vector<int>& sortida,
 	}
 }
 
-void overwrite(int pen, const vector<int>& sortida) {
+void overwrite() {
 	
 	ofstream out(fileout);
 	out.setf(ios::fixed);
 	out.precision(1);
 	
 	double temps = (double)(clock() - tStart)/CLOCKS_PER_SEC;
-	out << pen << " " << temps << endl;
+	out << pen_opt << " " << temps << endl;
 	out << sortida[0];
 	for (int i = 1; i < C; ++i) out << " " << sortida[i];
 	out << endl;
@@ -75,18 +77,17 @@ void overwrite(int pen, const vector<int>& sortida) {
 	out.close();
 	
 	// Debugging porpouses
-	cout << pen << " " << temps << endl;
+	cout << pen_opt << " " << temps << endl;
 	cout << sortida[0];
 	for (int i = 1; i < C; ++i) cout << " " << sortida[i];
 	cout << endl;
 }
 
-void search(int k, vector<Classe>& classes, vector<int>& sortida, int pen) {
+void search(int k, int pen) {
 	// Tenim una possible solució
 	if (k == C) {
 		pen_opt = pen;
-		sortida_opt = sortida;
-		overwrite(pen_opt, sortida_opt);
+		overwrite();
 	} else {
 		for (int id = 0; id < K; ++id){
 			if (classes[id].ncars > 0) { 
@@ -96,11 +97,11 @@ void search(int k, vector<Classe>& classes, vector<int>& sortida, int pen) {
 
 				// Actualitzem la penalització
 				int pen_ant = pen;
-				act_pen(classes, sortida, id, k, pen);
+				act_pen(id, k, pen);
 				int pen_dif = pen - pen_ant;
 				
 				// Seguim amb la millora i
-				if (pen < pen_opt) search(k+1, classes, sortida, pen);
+				if (pen < pen_opt) search(k+1, pen);
 
 				// No millorem el cotxe i
 				pen -= pen_dif;
@@ -113,7 +114,7 @@ void search(int k, vector<Classe>& classes, vector<int>& sortida, int pen) {
 int main(int argc, char** argv) {
 	// Rebem els fitxers per la terminal
 	fileout = argv[2];
-	in.open(argv[1]);
+	ifstream in(argv[1]);
 	
 	//Lectura de les dades del fitxer
 	in >> C >> M >> K;
@@ -122,7 +123,7 @@ int main(int argc, char** argv) {
 	for (pii& prop : proporcions) in >> prop.first;
 	for (pii& prop : proporcions) in >> prop.second;
 
-	vector<Classe> classes(K);
+	classes = vector<Classe> (K);
 	
 	for (Classe& cl : classes) {
 		in >> cl.id; // id de la classe
@@ -137,10 +138,8 @@ int main(int argc, char** argv) {
 	in.close();
 
 	pen_opt = 1e9;
-	sortida_opt = vector<int> (C);
-	vector<int> sortida(C);
-
+	sortida = vector<int> (C);
 	tStart = clock();
-	search(0, classes, sortida, 0);
-
+	
+	search(0, 0); // k, pen
 }
