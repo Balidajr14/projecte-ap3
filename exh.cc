@@ -26,28 +26,26 @@ struct Classe {
 	vector<bool> millores; 
 };
 
-void change_k_col(const vector<Classe>& classes, BMatriu& sequencies, int id, int k) {
-	for (int j = 0; j < M; ++j) {
-		sequencies[j][k] = classes[id].millores[j];
-	}
-}
-
-int count_finestra(BMatriu& seq, int nfin, int j, int k) {
-	int counter = 0;
+bool count_finestra(const vector<Classe>& classes, const vector<int>& sortida, int nfin, int m, int k, int& pen) {
+	int counter = -proporcions[m].first;
+	// Recorrem la finestra de k a k - nfin
 	for (int i = 0; i < nfin; ++i){
-		if (seq[j][k - i]) ++counter;
+		int id = sortida[k - i];
+		// Si trobem una millora sumem al counter
+		if (classes[id].millores[m]) {
+			if (++counter > 0) ++pen;
+			if (pen >= pen_opt) return true;
+		}
 	}
-	return counter;
+	return false;
 }
 
-void act_pen(const vector<Classe>& classes, BMatriu& sequencies,
+void act_pen(const vector<Classe>& classes, const vector<int>& sortida,
 				int id, int k, int& pen) {
 	// Finestres fins a k
 	for (int j = 0; j < M; ++j) {
 		int nfin = min(proporcions[j].second, k + 1);
-		int mills_fin = count_finestra(sequencies, nfin, j, k);
-		pen += max(0, mills_fin - proporcions[j].first);
-		if (pen >= pen_opt) return;
+		if (count_finestra(classes, sortida, nfin, j, k, pen)) return;
 	}
 	
 	// Últimes finestres
@@ -55,9 +53,9 @@ void act_pen(const vector<Classe>& classes, BMatriu& sequencies,
 		for (int j = 0; j < M; ++j) {
 			int nfin = min(proporcions[j].second, k + 1); 
 			while (--nfin > 0) {
-				int mills_fin = count_finestra(sequencies, nfin, j, k);
-				pen += max(0, mills_fin - proporcions[j].first);
-				if (pen >= pen_opt) return;
+				if (count_finestra(classes, sortida, nfin, j, k, pen)) {
+					return; // pen >= pen_opt
+				}
 			}
 		}
 	}
@@ -84,34 +82,30 @@ void overwrite(int pen, const vector<int>& sortida) {
 	cout << endl;
 }
 
-void search(int k, vector<Classe>& classes, BMatriu& sequencies, vector<int>& sortida, int pen) {
-	// La solució no és millor que la que ja hem calculat
-	if (pen >= pen_opt) return; 
-	
+void search(int k, vector<Classe>& classes, vector<int>& sortida, int pen) {
 	// Tenim una possible solució
-	if (k == C) { 
+	if (k == C) {
 		pen_opt = pen;
 		sortida_opt = sortida;
 		overwrite(pen_opt, sortida_opt);
 	} else {
-		for (int i = 0; i < K; ++i){
-			if (classes[i].ncars > 0) { 
+		for (int id = 0; id < K; ++id){
+			if (classes[id].ncars > 0) { 
 				// Millorem cotxe i
-				sortida[k] = i;
-				--classes[i].ncars; 
+				sortida[k] = id;
+				--classes[id].ncars; 
 
 				// Actualitzem la penalització
 				int pen_ant = pen;
-				change_k_col(classes, sequencies, i, k);
-				act_pen(classes, sequencies, i, k, pen);
+				act_pen(classes, sortida, id, k, pen);
 				int pen_dif = pen - pen_ant;
 				
 				// Seguim amb la millora i
-				search(k+1, classes, sequencies, sortida, pen);
+				if (pen < pen_opt) search(k+1, classes, sortida, pen);
 
 				// No millorem el cotxe i
 				pen -= pen_dif;
-				++classes[i].ncars;
+				++classes[id].ncars;
 			}
 		}
 	}
@@ -149,7 +143,7 @@ int main(int argc, char** argv) {
 
 	tStart = clock();
 
-	BMatriu sequencies(M, vector<bool> (C,false));
-	search(0, classes, sequencies, sortida, 0);
+	// BMatriu sequencies(M, vector<bool> (C,false));
+	search(0, classes, sortida, 0);
 
 }
