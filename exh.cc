@@ -7,7 +7,6 @@ using namespace std;
 typedef pair<int, int> pii;
 typedef vector<int> VI;
 typedef vector<VI> Matriu;
-typedef vector<vector<bool>> BMatriu;
 
 // Variables Globals
 ifstream in;
@@ -142,8 +141,6 @@ int main(int argc, char** argv) {
 	vector<int> sortida(C);
 
 	tStart = clock();
-
-	// BMatriu sequencies(M, vector<bool> (C,false));
 	search(0, classes, sortida, 0);
 
 }
