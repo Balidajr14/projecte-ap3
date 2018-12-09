@@ -53,11 +53,7 @@ void act_pen(int id, int k, int& pen) {
 	if (k == C - 1) {
 		for (int m = 0; m < M; ++m) {
 			int nfin = min(proporcions[m].second, k + 1); 
-			while (--nfin > 0) {
-				if (count_finestra(nfin, m, k, pen)) {
-					return; // pen >= pen_opt
-				}
-			}
+			while (--nfin > 0) if (count_finestra(nfin, m, k, pen)) return;
 		}
 	}
 }
