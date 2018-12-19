@@ -31,7 +31,7 @@ void best_reverse() {
 	int min_fix_id = 0;
 	int min_fix_val = INF;
 	
-	for (int i = 0; i < n; ++i) {
+	for (int i = 0; i < C; ++i) {
 		pair<int, int> best_var = best_reverse(i);
 		if (best_var.first < min_fix_val) {
 			min_fix_val = best_var.first;
