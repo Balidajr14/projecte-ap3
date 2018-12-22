@@ -41,7 +41,7 @@ bool count_finestra(int nfin, int m, int k, int& pen) {
 	return false;
 }
 
-void act_pen(int id, int k, int& pen) {
+void act_pen(int k, int& pen) {
 	
 	// Finestres fins a k
 	for (int m = 0; m < M; ++m) {
@@ -93,7 +93,7 @@ void search(int k, int pen) {
 
 				// Actualitzem la penalització
 				int pen_ant = pen;
-				act_pen(id, k, pen);
+				act_pen(k, pen);
 				int pen_dif = pen - pen_ant;
 				
 				// Seguim amb la millora i
